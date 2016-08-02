@@ -7,6 +7,9 @@ PLAYER_COLOR = "#FFFFFF";
 PLAYER_WIDTH = 10;
 PLAYER_SPEED = 4;
 GUN_OFFSET = 20;
+GUN_RAD = 6;
+GUN_SPEED = 7;
+FIRE_SPEED = 4;
 
 
 function startGame() {
@@ -23,10 +26,10 @@ var game_field = {
     this.canvas.width = FIELD_WIDTH;
     this.canvas.style.background = FIELD_BACKGROUND;
     this.canvas.context = this.canvas.getContext("2d");
-    this.guns = [new Gun(GUN_OFFSET, 5, 5, true, false)];
-    this.guns[1] = new Gun(GUN_OFFSET, 5, 5, true, true);
-    this.guns[2] = new Gun(GUN_OFFSET, 5, 5, false, false);
-    this.guns[3] = new Gun(GUN_OFFSET, 5, 5, false, true);
+    this.guns = [new Gun(GUN_OFFSET, GUN_RAD, GUN_SPEED, true, false)];
+    this.guns[1] = new Gun(GUN_OFFSET, GUN_RAD, GUN_SPEED, true, true);
+    this.guns[2] = new Gun(GUN_OFFSET, GUN_RAD, GUN_SPEED, false, false);
+    this.guns[3] = new Gun(GUN_OFFSET, GUN_RAD, GUN_SPEED, false, true);
     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
     
 
@@ -98,9 +101,13 @@ function Gun(offset, rad, speed, is_vert, is_oposite) {
   if(is_vert) {
     this.x = this.is_oposite ? (FIELD_WIDTH - this.offset) : this.offset;
     this.y = Math.round(FIELD_HEIGHT / 2);
+    this.gunX = this.is_oposite ? (this.x - 9) : (this.x + 9);
+    this.gunY = this.y;
   } else {
     this.x = Math.round(FIELD_WIDTH / 2);
     this.y = this.is_oposite ? (FIELD_HEIGHT - this.offset) : this.offset;
+    this.gunX = this.x;
+    this.gunY = this.is_oposite ? (this.y - 9) : (this.x + 9);
   }
 
   this.draw = function() {
@@ -114,16 +121,50 @@ function Gun(offset, rad, speed, is_vert, is_oposite) {
 
   this.move = function() {
     if(is_vert) {
-      this.direction *= (((this.direction > 0 && (this.y == (FIELD_HEIGHT - this.offset)))
-          || (this.direction < 0 && (this.y == this.offset))) ? -1 : 1);
+      this.direction *= (((this.direction > 0 && (this.y >= (FIELD_HEIGHT - this.offset)))
+          || (this.direction < 0 && (this.y <= this.offset))) ? -1 : 1);
       this.y += (this.speed * this.direction);
     } else {
-      this.direction *= (((this.direction > 0 && (this.x == (FIELD_WIDTH - this.offset)))
-          || (this.direction < 0 && (this.x == this.offset))) ? -1 : 1);
+      this.direction *= (((this.direction > 0 && (this.x >= (FIELD_WIDTH - this.offset)))
+          || (this.direction < 0 && (this.x <= this.offset))) ? -1 : 1);
       this.x += (this.speed * this.direction); 
+    }
+    var targetX = Math.round(player.width / 2) + player.x;
+    var targetY = Math.round(player.width / 2) + player.y;
+    if((!this.projectile) || this.projectile.is_out_of_bounds()) {
+      this.projectile = new Projectile(this, targetX, targetY, FIRE_SPEED);
+    } else {
+      this.projectile.move();
     }
   }
   
+}
+
+function Projectile(gun, targX, targY, sp) {
+
+  this.gun = gun;
+  this.x = this.gun.x;
+  this.y = this.gun.y;
+  this.initX = this.x;
+  this.initY = this.y;
+  this.targetX = targX;
+  this.targetY = targY;
+  this.speed = sp;
+  this.slope = (this.targetY - this.initY) / (this.targetX - this.initX);
+  this.y_intercept = (this.targetY - (this.slope * this.targetX));
+
+  this.is_out_of_bounds = function() {
+    return this.x < 0 || this.x > FIELD_WIDTH || this.y < 0 || this.y > FIELD_HEIGHT;
+  }
+
+  this.move = function() {
+    this.x += (this.initX < this.targetX) ? this.speed : -this.speed;
+    this.y = (this.x * this.slope) + this.y_intercept;
+    context = game_field.canvas.context;
+    context.fillStyle = "#FFFF00";
+    context.fillRect(this.x, this.y, 2, 2);
+  }
+
 }
 
 function updateField() {
