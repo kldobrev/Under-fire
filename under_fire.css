@@ -1,0 +1,15 @@
+canvas {
+  float: left;
+}
+
+#game_panel {
+  margin-left: 730px;
+}
+
+#scoreboard {
+  font-weight: bold;
+}
+
+#scoreboard span {
+  font-weight: normal;
+}

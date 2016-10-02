@@ -2,12 +2,16 @@
 <html>
   <head>
     <title>Under fire</title>
+    <link rel="stylesheet" type="text/css"href="under_fire.css"></link>
+    <script src="under_fire.js"></script>
   </head>
-  <script src="under_fire.js"></script>
 
-  <body>
-    <h1>Under fire</h1>
-
-    <script>startGame();</script>
+  <body onload="initGame();">
+    <div id="game_panel">
+      <h1>Under fire!</h1>
+      <button onclick="startGame();">Start</button>
+      <p>Use the arrow keys to move.</p>
+      <p id="scoreboard">Score: <span></span></p>
+    </div>
   </body>
 </html>
